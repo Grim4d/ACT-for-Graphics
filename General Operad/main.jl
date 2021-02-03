@@ -1,5 +1,7 @@
 using Colors, Compose
-set_default_graphic_size(10cm, 10cm)
+set_default_graphic_size(20cm, 20cm)
+
+symbol_dict = Dict()
 
 struct Disk
     identifier::String
@@ -9,12 +11,7 @@ struct Disk
     parameters::Vector{Disk}
 end
 
-"""
-    add_disk(rt::Disk, parent, child = [])
-
-The basic tree creation for disk operads. Specifying the new Disk, the parent identifier, and any potential children.
-"""
-function add_disk(rt::Disk, parent, child = [])
+function add_disk(rt::Disk, parent, child)
     found = false
 
     if parent == rt.identifier
@@ -33,10 +30,6 @@ function add_disk(rt::Disk, parent, child = [])
     return rt, found
 end
 
-"""
-    draw_disk(to_draw, origin, dash)
-Basics for drawing a disk. THe origin is what the disk will be relative to, and dash will be used for circles with outlines
-"""
 function draw_disk(to_draw, origin, dash)
     center = (origin[1] + (to_draw.location[1] * cosd(to_draw.location[2])), origin[2] + (to_draw.location[1] * sind(to_draw.location[2])))
     return compose(context(), circle(center[1], center[2], to_draw.radius), fill(to_draw.color))
@@ -49,9 +42,6 @@ function draw_disk(to_draw, origin, dash)
     #end
 end
 
-"""
-    disk_compose_single(root, origin, leaf_only::Int)
-"""
 function disk_compose_single(root, origin, leaf_only::Int)
     leafs = []
     center = (origin[1] + (root.location[1] * cosd(root.location[2])), origin[2] + (root.location[1] * sind(root.location[2])))
@@ -69,9 +59,6 @@ function disk_compose_single(root, origin, leaf_only::Int)
     return leafs
 end
 
-"""
-    disk_compose_single_base(root, leaf_only::Int)
-"""
 function disk_compose_single_base(root, leaf_only::Int)
     leafs = []
     center = (0.5, 0.5)
@@ -85,9 +72,6 @@ function disk_compose_single_base(root, leaf_only::Int)
     (context(), rectangle()), fill("tomato"))
 end
 
-"""
-    height_calculation(root)
-"""
 function height_calculation(root)
     height = 2 * root.radius + 0.3
     additional_height = 0
@@ -101,16 +85,10 @@ function height_calculation(root)
     return height
 end
 
-"""
-    disk_compose_tree(root, height, width)
-"""
 function disk_compose_tree(root, height, width)
 
 end
 
-"""
-    disk_compose_tree_base(root)
-"""
 function disk_compose_tree_base(root)
     height = height_calculation(root)
     
@@ -130,12 +108,12 @@ end
 
 function main()
     root = Disk("a", "bisque",(0, 0), 0.45, [])
-    add_disk(root, "a", Disk("b", "orange", (0.235, 45), 0.2, []))
+    add_disk(root, "a", Disk("b", "orange", (0.25, 45), 0.2, []))
     add_disk(root, "a", Disk("c", "red", (0.20, 225), 0.225, []))
     add_disk(root, "b", Disk("d", "black", (0.1, 225), 0.1, []))
     add_disk(root, "c", Disk("e", "yellow", (0.1, 0), 0.1, []))
     add_disk(root, "c", Disk("e", "lime", (0.1, 180), 0.05, []))
-    compose(context(), disk_compose_single_base(root,0))
+    compose(context(), disk_compose_tree_base(root))
 end
 
 main()
