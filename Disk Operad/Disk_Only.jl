@@ -130,7 +130,7 @@ end
 
 function main()
     root = Disk("a", "bisque",(0, 0), 0.45, [])
-    add_disk(root, "a", Disk("b", "orange", (0.235, 45), 0.2, []))
+    add_disk(root, "a", Disk("b", s"orange", (0.235, 45), 0.2, []))
     add_disk(root, "a", Disk("c", "red", (0.20, 225), 0.225, []))
     add_disk(root, "b", Disk("d", "black", (0.04, 45), 0.1, []))
     add_disk(root, "c", Disk("e", "yellow", (0.1, 0), 0.1, []))

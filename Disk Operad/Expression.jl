@@ -130,7 +130,9 @@ function main()
     all_disks["e"] = Disk("yellow", 0.1, [])
     all_disks["f"] = Disk("lime", 0.4, [])
     expression = "a(b(d()), c(e(), f()))"
-
+    compose(context(), disk_compose_single_base(Meta.parse(expression), all_disks, 0))
+    
+    #=
     for i in 1:360
         file_path = string("Saved Images/Disk Operad/", string(i), ".png")
         all_disks["a"] = Disk("bisque", 1, [Parameter_Data(45 + i, 0.5), Parameter_Data(225 + i, 0.5)])
@@ -147,21 +149,7 @@ function main()
     end
 
     gif(anim, "Saved Images/Rotating Cicles.gif", fps = 30)
-end
-
-@userplot CirclePlot
-@recipe function f(cp::CirclePlot)
-    x, y, i = cp.args
-    n = length(x)
-    inds = circshift(1:n, 1 - i)
-    linewidth --> range(0, 10, length = n)
-    seriesalpha --> range(0, 1, length = n)
-    aspect_ratio --> 1
-    label --> false
-    x[inds], y[inds]
+    =#
 end
 
 main()
-
-
-
