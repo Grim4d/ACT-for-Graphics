@@ -7,15 +7,10 @@ using Compose: circle, rectangle
 
 set_default_graphic_size(10cm, 10cm)
 
-struct Parameter_Data
-    angle::Float64
-    radius::Float64
-end
-
 struct Disk
     color::String
-    radius::Float64
-    parameters::Vector{Parameter_Data}
+    radius::Vector{Float64}
+    parameters::Vector{Complex}
 end
 
 """
@@ -23,7 +18,7 @@ end
 Basics for drawing a disk. The origin is what the disk will be relative to, and dash will be used for circles with outlines
 """
 function draw_disk(to_draw::Disk, position::Tuple{Float64,Float64}, dash::Int, relative_size::Float64 = 0.5)
-    return compose(context(), circle(position[1], position[2], to_draw.radius*relative_size), fill(to_draw.color))
+    return compose(context(), circle(position[1], position[2], to_draw.radius[1]*relative_size), fill(to_draw.color))
 end
 
 """
@@ -33,14 +28,14 @@ function disk_compose_single(command::Expr, disks::Dict{String, Disk}, center_po
     tree = []
 
     center_disk = disks[string(command.args[1])]
-    relative_radius = center_disk.radius * 0.5
+    relative_radius = center_disk.radius[1] * 0.5
 
     if size(command.args)[1] == 1
         return [draw_disk(center_disk, center_point, leaf_only)]
     else
         
         for i = 2:size(command.args)[1]
-            new_center = (0.5 + (0.5*center_disk.parameters[i-1].radius * cosd(center_disk.parameters[i-1].angle)), 0.5 + (0.5*center_disk.parameters[i-1].radius * sind(center_disk.parameters[i-1].angle)))
+            new_center = (0.5 + (0.5*real(center_disk.parameters[i-1])), 0.5 + (0.5*imag(center_disk.parameters[i-1])))
             tree = [tree; compose(context(center_point[1]-relative_radius, center_point[2]-relative_radius, 2*relative_radius, 2*relative_radius), 
                 disk_compose_single(command.args[i], disks, new_center, leaf_only)...)]
         end
@@ -60,96 +55,73 @@ function disk_compose_single_base(command::Expr, disks::Dict{String,Disk}, leaf_
     
     center_point = (0.5, 0.5)
     center_disk = disks[string(command.args[1])]
-    relative_radius = center_disk.radius * 0.5
+    relative_radius = center_disk.radius[1] * 0.5
 
     for i = 2:size(command.args)[1]
-        new_center = (center_point[1] + (0.5 * center_disk.parameters[i-1].radius * cosd(center_disk.parameters[i-1].angle)), center_point[2] + (0.5 * center_disk.parameters[i-1].radius * sind(center_disk.parameters[i-1].angle)))
+        new_center = (0.5 + (0.5*real(center_disk.parameters[i-1])), 0.5 + (0.5*imag(center_disk.parameters[i-1])))
         tree = [tree; compose(context(center_point[1]-relative_radius, center_point[2]-relative_radius, 2*relative_radius, 2*relative_radius), 
             disk_compose_single(command.args[i], disks, new_center, leaf_only)...)]
     end
 
     return (context(), 
     tree...,
-    compose(context(), circle(center_point[1], center_point[2], center_disk.radius*0.5),  fill("bisque")),
+    compose(context(), circle(center_point[1], center_point[2], center_disk.radius[1]*0.5),  fill("bisque")),
     compose(context(), rectangle()), fill("tomato"))
 end
 
-function height_calculation(command::Expr)
-    if size(command.args)[1] == 1
-        return (1, 1)
-    end
-
-    height = 1;
-    width = 0;
-    for i = 2:size(command.args)[1]
-        new_values = height_calculation(command.args[i])
-
-        width = width + new_values[2]
-
-        if height <= new_values[1]
-            height = new_values[1] + 1
+function animater(disks::Dict{String, Disk}, animations::Dict{String, Vector{String}})
+    for i in keys(disks)
+        eval(Meta.parse(string(i, "_r = ", disks[i].radius[1])))
+        for j in 1:size(disks[i].parameters)[1]
+            eval(Meta.parse(string(i, j,"_pos = ", disks[i].parameters[j])))
         end
     end
 
-    return (height, width)
-end
+    for i in keys(disks)
+        disks[i].radius[1] = eval(Meta.parse(animations[i][1]))
+    end
 
-"""
-    disk_compose_tree(root, height, width)
-"""
-function disk_compose_tree(root, height, width)
-
-end
-
-"""
-    disk_compose_tree_base(root)
-"""
-function disk_compose_tree_base(root)
-    height = height_calculation(root)
-    
-    println(height)
-
-    leafs = []
-    #center = (0.5, 0.5)
-    #for i in root.parameters    
-        #leafs = [leafs; disk_compose_tree(i, cur_height, cur_width)]
-    #end
-
-    return (context(), 
-    leafs...,
-    (context(), circle( root.radius, root.radius, root.radius),  fill("bisque")),
-    (context(), rectangle()), fill("tomato"))
+    for i in keys(disks)
+        for j in 1:size(disks[i].parameters)[1]
+            disks[i].parameters[j] = eval(Meta.parse(animations[i][j+1]))
+        end
+    end
 end
 
 function main()
     all_disks = Dict{String, Disk}()
-    all_disks["a"] = Disk("bisque", 1, [Parameter_Data(45, 0.5), Parameter_Data(225, 0.5)])
-    all_disks["b"] = Disk("orange", 0.5, [Parameter_Data(45, 0.5)])
-    all_disks["c"] = Disk("red", 0.3, [Parameter_Data(45, 0.5), Parameter_Data(225, 0.5)])
-    all_disks["d"] = Disk("black", 0.3, [])
-    all_disks["e"] = Disk("yellow", 0.1, [])
-    all_disks["f"] = Disk("lime", 0.4, [])
+    all_disks["a"] = Disk("bisque", [0.9], [complex(0.5/sqrt(2), 0.5/sqrt(2)), complex(-0.5/sqrt(2), -0.5/sqrt(2))])
+    all_disks["b"] = Disk("orange", [0.5], [complex(0.5/sqrt(2), 0.5/sqrt(2))])
+    all_disks["c"] = Disk("red", [0.4], [complex(0.5/sqrt(2), 0.5/sqrt(2)), complex(-0.5/sqrt(2), -0.5/sqrt(2))])
+    all_disks["d"] = Disk("black", [0.9], [])
+    all_disks["e"] = Disk("yellow", [0.3], [])
+    all_disks["f"] = Disk("lime", [0.4], [])
+        
+    disk_animations = Dict{String, Vector{String}}()
+    disk_animations["a"] = ["a_r * 1", "a1_pos * im ^ (4/360)", "a2_pos * im ^ (4/360)"]
+    disk_animations["b"] = ["b_r * 1", "complex(( (1 - (d_r/1)) * cos(angle(b1_pos)) ), ( (1 - (d_r/1))) * sin(angle(b1_pos)) )"]
+    disk_animations["c"] = ["c_r * 1", "c1_pos * im ^ (-4/360)", "c2_pos * im ^ (-4/360)"]
+    disk_animations["d"] = ["(sin(angle(a1_pos))/4) + 0.5"]
+    disk_animations["e"] = ["e_r * 1"]
+    disk_animations["f"] = ["f_r * 1"]
+
     expression = "a(b(d()), c(e(), f()))"
-    compose(context(), disk_compose_single_base(Meta.parse(expression), all_disks, 0))
+
     
-    #=
-    for i in 1:360
+    for i in 1:361
         file_path = string("Saved Images/Disk Operad/", string(i), ".png")
-        all_disks["a"] = Disk("bisque", 1, [Parameter_Data(45 + i, 0.5), Parameter_Data(225 + i, 0.5)])
-        all_disks["b"] = Disk("orange", 0.5, [Parameter_Data(45 - i, 0.5)])
-        all_disks["c"] = Disk("red", 0.3, [Parameter_Data(45 - i, 0.5), Parameter_Data(225 - i, 0.5)])
+        animater(all_disks, disk_animations)
         frame = compose(context(), disk_compose_single_base(Meta.parse(expression), all_disks, 0))
         draw(PNG(file_path, 10cm, 10cm, dpi=250), frame) 
     end
 
-    anim = @animate for i in 1:360
+    anim = @animate for i in 2:361
         file_path = string("Saved Images/Disk Operad/", string(i), ".png")
         image = FileIO.load(file_path)
         plot(image, axis = nothing, background_color=:transparent)
     end
 
     gif(anim, "Saved Images/Rotating Cicles.gif", fps = 30)
-    =#
 end
 
 main()
