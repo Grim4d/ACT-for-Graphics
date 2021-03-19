@@ -17,6 +17,11 @@ comm_group = @theory begin
     (a / b) == a / b
     (a / b) == (a / (b - 1)) * (a / 1)
 
+    θ = θ + 2pi
+    θ = θ + 2pi
+    θ = θ + 2pi
+    θ = θ + 2pi
+
 end
 
 distrib = @theory begin
@@ -25,4 +30,4 @@ end
 
 t = comm_monoid ∪ comm_group ∪ distrib
 
-@areequal t ((a / 6) * (a / 1)) (a / 7)
+@areequal t (θ) (θ + 8pi)
