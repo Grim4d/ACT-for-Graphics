@@ -89,6 +89,60 @@ function animater(disks::Dict{String, Disk}, animations::Dict{String, Vector{Str
 end
 
 function main()
+    expression = "a(b(d()), c(e(), f()))"
+
+    Frame1 = Dict{String, Disk}()
+    Frame1["a"] = Disk("bisque", [0.9], [complex(0.5/sqrt(2), 0.5/sqrt(2)), complex(-0.5/sqrt(2), -0.5/sqrt(2))])
+    Frame1["b"] = Disk("orange", [0.5], [complex(0.5/sqrt(2), -0.5/sqrt(2))])
+    Frame1["c"] = Disk("red", [0.4], [complex(0.5/sqrt(2), 0.5/sqrt(2)), complex(-0.5/sqrt(2), -0.5/sqrt(2))])
+    Frame1["d"] = Disk("black", [0.5], [])
+    Frame1["e"] = Disk("yellow", [0.3], [])
+    Frame1["f"] = Disk("lime", [0.4], [])
+
+    Frame2 = deepcopy(Frame1)
+    Frame2["b"] = Disk("orange", [0.5], [complex(-0.5/sqrt(2), 0.5/sqrt(2))])
+
+    Frame3 = deepcopy(Frame1)
+    Frame3["b"] = Disk("orange", [0.5], [complex(-0.5/sqrt(2), -0.5/sqrt(2))])
+
+    Transition = deepcopy(Frame1)
+
+    for i in 1:60
+        file_path = string("Saved Images/Disk Operad/", string(i), ".png")
+
+        Transition["b"] = Disk("orange", [0.5], [( ((60-i)/60) * Frame1["b"].parameters[1] ) + ( ((i)/60) * Frame2["b"].parameters[1] )])
+
+        frame = compose(context(), disk_compose_single_base(Meta.parse(expression), Transition, 0))
+        draw(PNG(file_path, 10cm, 10cm, dpi=250), frame) 
+    end
+
+    for i in 1:30
+        file_path = string("Saved Images/Disk Operad/", string(i + 60), ".png")
+
+        Transition["b"] = Disk("orange", [0.5], [( sin(((30-i)/30) * (pi/2)) * Frame2["b"].parameters[1] ) + ( cos(((30-i)/30) * (pi/2)) * Frame3["b"].parameters[1] )])
+
+        frame = compose(context(), disk_compose_single_base(Meta.parse(expression), Transition, 0))
+        draw(PNG(file_path, 10cm, 10cm, dpi=250), frame) 
+    end
+
+    for i in 1:30
+        file_path = string("Saved Images/Disk Operad/", string(i + 90), ".png")
+
+        Transition["b"] = Disk("orange", [0.5], [( sin(((30-i)/30) * (pi/2)) * Frame3["b"].parameters[1] ) + ( cos(((30-i)/30) * (pi/2)) * Frame1["b"].parameters[1] )])
+
+        frame = compose(context(), disk_compose_single_base(Meta.parse(expression), Transition, 0))
+        draw(PNG(file_path, 10cm, 10cm, dpi=250), frame) 
+    end
+
+    anim = @animate for i in 1:120
+        file_path = string("Saved Images/Disk Operad/", string(i), ".png")
+        image = FileIO.load(file_path)
+        plot(image, axis = nothing, background_color=:transparent)
+    end
+
+    gif(anim, "Saved Images/Rotating Cicles.gif", fps = 30)
+
+    #=
     all_disks = Dict{String, Disk}()
     all_disks["a"] = Disk("bisque", [0.9], [complex(0.5/sqrt(2), 0.5/sqrt(2)), complex(-0.5/sqrt(2), -0.5/sqrt(2))])
     all_disks["b"] = Disk("orange", [0.5], [complex(0.5/sqrt(2), 0.5/sqrt(2))])
@@ -96,7 +150,9 @@ function main()
     all_disks["d"] = Disk("black", [0.9], [])
     all_disks["e"] = Disk("yellow", [0.3], [])
     all_disks["f"] = Disk("lime", [0.4], [])
+    =#
 
+    #=
     disk_animations = Dict{String, Vector{String}}()
     disk_animations["a"] = ["a_r * 1", "a1_pos * im ^ (4/360)", "a2_pos * im ^ (4/360)"]
     disk_animations["b"] = ["b_r * 1", "complex(( (1 - (d_r/1)) * cos(angle(b1_pos)) ), ( (1 - (d_r/1))) * sin(angle(b1_pos)) )"]
@@ -121,6 +177,7 @@ function main()
     end
 
     gif(anim, "Saved Images/Rotating Cicles.gif", fps = 30)
+    =#
 end
 
 main()
